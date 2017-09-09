@@ -1,0 +1,36 @@
+apply plugin: 'maven'
+
+def IS_RELEASE = false
+
+def ARTIFACTID = "router"
+def GROUPID = "com.lch"
+def PACKAGING = "aar"
+
+
+uploadArchives {
+    configuration = configurations.archives
+
+
+
+    repositories {
+        mavenDeployer {
+            if (IS_RELEASE) {
+                repository(url: mavenLocal().url)
+                pom.project {
+                    version '1.0.0'
+                    artifactId ARTIFACTID
+                    groupId GROUPID
+                    packaging PACKAGING
+                }
+            } else {
+                repository(url: mavenLocal().url)
+                pom.project {
+                    version '1.0.3'
+                    artifactId ARTIFACTID
+                    groupId GROUPID
+                    packaging PACKAGING
+                }
+            }
+        }
+    }
+}
