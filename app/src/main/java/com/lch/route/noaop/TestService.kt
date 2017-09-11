@@ -12,7 +12,7 @@ import com.lch.route.noaop.lib.RouteService
 
     @RouteMethod("t")
     fun tes(params:Map<String,String>) {
-        Log.e("test", "i am a route test=============================")
+        Log.e("test", "i am a route test=============================$params")
     }
 
 

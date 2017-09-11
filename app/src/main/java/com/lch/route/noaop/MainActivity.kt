@@ -29,8 +29,8 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        RouteEngine.route("myrp://com.lch.test/home/he")
-        RouteEngine.route("myrp://com.lch.test/test/t")
+        RouteEngine.route(MT_ONCREATE)
+        RouteEngine.route(PREG_ONCREATE, mapOf("age" to "18"))
     }
 
 

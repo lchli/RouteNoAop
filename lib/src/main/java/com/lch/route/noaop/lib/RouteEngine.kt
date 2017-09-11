@@ -56,75 +56,76 @@ object RouteEngine {
     }
 
 
-    fun route(path: String): Any? {
-        return try {
-            routeImpl(path)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            notFound(path, e.message + "")
-            null
-        }
-    }
-
     fun setDegradeHandler(degradeHandler: DegradeHandler) {
 
         mDegradeHandler = degradeHandler
     }
 
 
-    private fun routeImpl(path: String): Any? {
-        val uri = Uri.parse(path)
-        val segs = uri.pathSegments
-        if (segs == null || segs.size != 2) {
-            val msg = "route path is not valid:$path"
-            Log.e(TAG, msg)
-            notFound(path, msg)
-            return null
-        }
-        val moduleNameInPath = segs[0]
-        val methodNameInPath = segs[1]
+    fun route(path: String, params: Map<String, String>? = null): Any? {
+        try {
 
-        val queryNames = uri.queryParameterNames
-        val map = mutableMapOf<String, String>()
-        if (queryNames != null && !queryNames.isEmpty()) {
-            for (param in queryNames) {
-                map.put(param, uri.getQueryParameter(param))
+            val uri = Uri.parse(path)
+            val segs = uri.pathSegments
+            if (segs == null || segs.size != 2) {
+                val msg = "route path is not valid:$path"
+                Log.e(TAG, msg)
+                notFound(path, msg)
+                return null
             }
-        }
+            val moduleNameInPath = segs[0]
+            val methodNameInPath = segs[1]
 
-        val className = modToClassName[moduleNameInPath]
-        if (className == null) {
-            val msg = "route cannot find match class $moduleNameInPath in $path"
-            Log.e(TAG, msg)
-            notFound(path, msg)
-            return null
-        }
-        val clazz = Class.forName(className) ?: return null
+            val queryNames = uri.queryParameterNames
+            val map = mutableMapOf<String, String>()
+            if (queryNames != null && !queryNames.isEmpty()) {
+                for (param in queryNames) {
+                    map.put(param, uri.getQueryParameter(param))
+                }
+            }
+            if (params != null) {
+                map.putAll(params)
+            }
 
-        val methodPath = "$moduleNameInPath/$methodNameInPath"
-        val realMethodName = methodCache[methodPath] ?: findMethodInClass(methodNameInPath, clazz)
-        if (realMethodName == null) {
-            val msg = "route cannot find match method $methodNameInPath in $className for $path"
-            Log.e(TAG, msg)
-            notFound(path, msg)
-            return null
-        }
-        methodCache.put(methodPath, realMethodName)
+            val className = modToClassName[moduleNameInPath]
+            if (className == null) {
+                val msg = "route cannot find match class $moduleNameInPath in $path"
+                Log.e(TAG, msg)
+                notFound(path, msg)
+                return null
+            }
+            val clazz = Class.forName(className) ?: return null
 
-        val method = try {
-            clazz.getDeclaredMethod(realMethodName, Map::class.java)
+            val methodPath = "$moduleNameInPath/$methodNameInPath"
+            val realMethodName = methodCache[methodPath] ?: findMethodInClass(methodNameInPath, clazz)
+            if (realMethodName == null) {
+                val msg = "route cannot find match method $methodNameInPath in $className for $path"
+                Log.e(TAG, msg)
+                notFound(path, msg)
+                return null
+            }
+            methodCache.put(methodPath, realMethodName)
+
+            val method = try {
+                clazz.getDeclaredMethod(realMethodName, Map::class.java)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                notFound(path, e.message + "")
+                return null
+            }
+            method.isAccessible = true
+
+            val ctr = clazz.getDeclaredConstructor()
+            ctr.isAccessible = true
+
+            return method.invoke(ctr.newInstance(), map)
+
         } catch (e: Exception) {
             e.printStackTrace()
             notFound(path, e.message + "")
-            return null
         }
-        method.isAccessible = true
 
-        val ctr = clazz.getDeclaredConstructor()
-        ctr.isAccessible = true
-
-        return method.invoke(ctr.newInstance(), map)
-
+        return null
     }
 
 
