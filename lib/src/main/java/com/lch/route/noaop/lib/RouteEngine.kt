@@ -2,7 +2,6 @@ package com.lch.route.noaop.lib
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.properties.Delegates
@@ -69,7 +68,7 @@ object RouteEngine {
             val segs = uri.pathSegments
             if (segs == null || segs.size != 2) {
                 val msg = "route path is not valid:$path"
-                Log.e(TAG, msg)
+                Logg.e(TAG, msg)
                 notFound(path, msg)
                 return null
             }
@@ -90,7 +89,7 @@ object RouteEngine {
             val className = modToClassName[moduleNameInPath]
             if (className == null) {
                 val msg = "route cannot find match class $moduleNameInPath in $path"
-                Log.e(TAG, msg)
+                Logg.e(TAG, msg)
                 notFound(path, msg)
                 return null
             }
@@ -100,7 +99,7 @@ object RouteEngine {
             val realMethodName = methodCache[methodPath] ?: findMethodInClass(methodNameInPath, clazz)
             if (realMethodName == null) {
                 val msg = "route cannot find match method $methodNameInPath in $className for $path"
-                Log.e(TAG, msg)
+                Logg.e(TAG, msg)
                 notFound(path, msg)
                 return null
             }
