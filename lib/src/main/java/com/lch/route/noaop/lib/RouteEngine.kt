@@ -11,7 +11,7 @@ import kotlin.properties.Delegates
  */
 object RouteEngine {
 
-    private val modToClassName: MutableMap<String, String> = mutableMapOf()
+    private val modToClassObject: MutableMap<String, Router> = mutableMapOf()
     private val methodCache: MutableMap<String, String> = mutableMapOf()
     private val TAG = "RouteEngine"
     private var mDegradeHandler: DegradeHandler? = null
@@ -35,7 +35,9 @@ object RouteEngine {
             val clas = Class.forName(className)
             val anno = clas.getAnnotation(RouteService::class.java)
             if (anno != null) {
-                modToClassName.put(anno.value, className)
+                val router = clas.newInstance() as? Router ?: throw RuntimeException("route service[$className] must implements Router interface. ")
+                router.init(ctx)
+                modToClassObject.put(anno.value, router)
             }
         }
 
@@ -48,7 +50,9 @@ object RouteEngine {
         for (cls in moduleClasses) {
             val anno = cls.getAnnotation(RouteService::class.java)
             if (anno != null) {
-                modToClassName.put(anno.value, cls.name)
+                val router = cls.newInstance() as? Router ?: throw RuntimeException("route service[${cls.name}] must implements Router interface. ")
+                router.init(ctx)
+                modToClassObject.put(anno.value, router)
             }
         }
 
@@ -86,19 +90,19 @@ object RouteEngine {
                 map.putAll(params)
             }
 
-            val className = modToClassName[moduleNameInPath]
-            if (className == null) {
+            val router = modToClassObject[moduleNameInPath]
+            if (router == null) {
                 val msg = "route cannot find match class $moduleNameInPath in $path"
                 Logg.e(TAG, msg)
                 notFound(path, msg)
                 return null
             }
-            val clazz = Class.forName(className) ?: return null
+            val clazz = router.javaClass
 
             val methodPath = "$moduleNameInPath/$methodNameInPath"
             val realMethodName = methodCache[methodPath] ?: findMethodInClass(methodNameInPath, clazz)
             if (realMethodName == null) {
-                val msg = "route cannot find match method $methodNameInPath in $className for $path"
+                val msg = "route cannot find match method $methodNameInPath in $router for $path"
                 Logg.e(TAG, msg)
                 notFound(path, msg)
                 return null
@@ -114,10 +118,7 @@ object RouteEngine {
             }
             method.isAccessible = true
 
-            val ctr = clazz.getDeclaredConstructor()
-            ctr.isAccessible = true
-
-            return method.invoke(ctr.newInstance(), map)
+            return method.invoke(router, map)
 
         } catch (e: Exception) {
             e.printStackTrace()
