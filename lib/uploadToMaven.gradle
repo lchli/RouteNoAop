@@ -1,10 +1,15 @@
 apply plugin: 'maven'
+apply plugin: 'signing'
 
 def IS_RELEASE = false
 
 def ARTIFACTID = "router"
 def GROUPID = "com.lch"
 def PACKAGING = "aar"
+
+signing.keyId=""
+signing.password=""
+signing.secretKeyRingFile="~/.gnupg/secring.gpg"
 
 
 uploadArchives {
@@ -15,7 +20,13 @@ uploadArchives {
     repositories {
         mavenDeployer {
             if (IS_RELEASE) {
-                repository(url: mavenLocal().url)
+
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                repository(url: "https://oss.sonatype.org/content/repositories/snapshots/"){
+                    authentication(userName: "", password: "")
+                }
+
                 pom.project {
                     version '1.0.0'
                     artifactId ARTIFACTID
@@ -33,4 +44,10 @@ uploadArchives {
             }
         }
     }
+}
+
+
+signing {
+    required { gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
 }
