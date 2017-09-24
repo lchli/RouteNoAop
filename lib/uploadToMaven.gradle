@@ -4,12 +4,10 @@ apply plugin: 'signing'
 def IS_RELEASE = false
 
 def ARTIFACTID = "router"
-def GROUPID = "com.lch"
+def GROUPID = "com.github.lchli"
 def PACKAGING = "aar"
 
-signing.keyId=""
-signing.password=""
-signing.secretKeyRingFile="~/.gnupg/secring.gpg"
+
 
 
 uploadArchives {
@@ -21,14 +19,19 @@ uploadArchives {
         mavenDeployer {
             if (IS_RELEASE) {
 
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                //beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                //signing.keyId=""
+                //signing.password=""
+                //signing.secretKeyRingFile="~/.gnupg/secring.gpg"
 
-                repository(url: "https://oss.sonatype.org/content/repositories/snapshots/"){
-                    authentication(userName: "", password: "")
+                println("$UNAME=$PWD")
+
+                repository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: UNAME, password: PWD)
                 }
 
                 pom.project {
-                    version '1.0.0'
+                    version '1.0.0-SNAPSHOT'
                     artifactId ARTIFACTID
                     groupId GROUPID
                     packaging PACKAGING
