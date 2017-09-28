@@ -39,7 +39,7 @@ uploadArchives {
             } else {
                 repository(url: mavenLocal().url)
                 pom.project {
-                    version '1.0.4'
+                    version '1.0.5'
                     artifactId ARTIFACTID
                     groupId GROUPID
                     packaging PACKAGING

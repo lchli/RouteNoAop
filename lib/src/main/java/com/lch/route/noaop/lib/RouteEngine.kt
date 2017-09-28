@@ -128,6 +128,10 @@ object RouteEngine {
         return null
     }
 
+    fun getModule(moduleName: String): Any? {
+        return modToClassObject[moduleName]
+    }
+
 
     private fun findMethodInClass(methodNameInPath: String, clazz: Class<*>): String? {
 
